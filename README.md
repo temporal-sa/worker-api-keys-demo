@@ -14,7 +14,7 @@
 ```
 go run ./worker -namespace <namespace> -grpcEndpoint <grpcEndpoint> -apikey <apikey>
 ```
-4. Start the worker
+4. Run a workflow
 ```
 go run ./starter -namespace <namespace> -grpcEndpoint <grpcEndpoint> -apikey <apikey>
 ```
