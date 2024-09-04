@@ -62,7 +62,7 @@ func ParseParams(args []string) (Params, error) {
 	if err := set.Parse(args); err != nil {
 		return Params{}, fmt.Errorf("failed parsing args: %w", err)
 	} else if *apiKey == "" {
-		return Params{}, fmt.Errorf("-namespace is required")
+		return Params{}, fmt.Errorf("-apiKey is required")
 	}
 
 	return Params{
