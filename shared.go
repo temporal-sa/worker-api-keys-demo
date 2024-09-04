@@ -57,13 +57,14 @@ func ParseParams(args []string) (Params, error) {
 	namespace := set.String("namespace", "Default", "Namespace for the server")
 	grpcEndpoint := set.String("grpcEndpoint", "us-east-1.aws.api.temporal.io:7233", "Namespace gRPC endpoint")
 	apiKey := set.String("apikey", "", "Data plane API key")
-	serverName := strings.Split(*grpcEndpoint, ":")[0]
 
 	if err := set.Parse(args); err != nil {
 		return Params{}, fmt.Errorf("failed parsing args: %w", err)
 	} else if *apiKey == "" {
 		return Params{}, fmt.Errorf("-apiKey is required")
 	}
+
+	serverName := strings.Split(*grpcEndpoint, ":")[0]
 
 	return Params{
 		Namespace:    *namespace,

@@ -30,8 +30,8 @@ func main() {
 		}
 		defer r.Body.Close()
 
-		log.Default().Println("API key updated")
 		params.ApiKey = string(body)
+		log.Default().Println("API key updated")
 
 		w.WriteHeader(http.StatusAccepted)
 	})
