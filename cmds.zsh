@@ -12,7 +12,8 @@ NAMESPACE=`tcld namespace create --namespace $NAMESPACE_SHORTNAME --region $REGI
 GRPC_ENDPOINT=`tcld namespace get --namespace $NAMESPACE | jq -r '.uri.regionalGrpc'`
 
 # Create a service account with admin permission for the namespace
-SA_ID=`tcld service-account create --name from-cli --account-role Read --namespace-permission $NAMESPACE=Admin | jq -r '.serviceAccountId'`
+SA_NAME=demo-sa
+SA_ID=`tcld service-account create --name $SA_NAME --account-role Read --namespace-permission $NAMESPACE=Admin | jq -r '.serviceAccountId'`
 
 # Create 2 API keys
 KEY_NAME=demo-key
