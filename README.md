@@ -28,7 +28,7 @@ go run ./worker -namespace <namespace> -grpcEndpoint <grpcEndpoint> -apikey <api
 ```
 3. Run a workflow using `apikey2`
 ```
-go run ./starter -namespace <namespace> -grpcEndpoint <grpcEndpoint> -apikey <apike21>
+go run ./starter -namespace <namespace> -grpcEndpoint <grpcEndpoint> -apikey <apikey2>
 ```
 4. Disable `key1`
 ```
@@ -40,8 +40,8 @@ tcld apikey disable --id <key1 id>
 go run ./starter -namespace <namespace> -grpcEndpoint <grpcEndpoint> -apikey <apike21>
 ```
 Note the work flow doesn't progress.
-7. Update the worker so that it uses `key2` (which is still enabled)
+7. Update the worker so that it uses `apikey2` (which is still enabled)
 ```
-curl -X PUT http://localhost:3333/ -d 'key2'
+curl -X PUT http://localhost:3333/ -d 'apikey2'
 ```
 8. The workflow will now complete.
