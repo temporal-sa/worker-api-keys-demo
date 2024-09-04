@@ -10,7 +10,12 @@ import (
 )
 
 func main() {
-	c, err := shared.Connect(os.Args[1:])
+	params, err := shared.ParseParams(os.Args[1:])
+	if err != nil {
+		log.Fatalln("Failed to parse input parameters", err)
+	}
+
+	c, err := shared.Connect(&params)
 	if err != nil {
 		log.Fatalln("Unable to create Temporal client", err)
 	}

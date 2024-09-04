@@ -1,7 +1,9 @@
 package main
 
 import (
+	"io"
 	"log"
+	"net/http"
 	"os"
 
 	shared "github.com/temporal-sa/worker-api-keys-demo"
@@ -9,7 +11,39 @@ import (
 )
 
 func main() {
-	c, err := shared.Connect(os.Args[1:])
+	params, err := shared.ParseParams(os.Args[1:])
+	if err != nil {
+		log.Fatalln("Failed to parse input parameters", err)
+	}
+
+	// "kms" service
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			http.Error(w, "", http.StatusMethodNotAllowed)
+			return
+		}
+
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Failed to read request body", http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close()
+
+		log.Default().Println("API key updated")
+		params.ApiKey = string(body)
+
+		w.WriteHeader(http.StatusAccepted)
+	})
+
+	go func() {
+		err := http.ListenAndServe(":3333", nil)
+		if err != nil {
+			log.Fatalln("Unable to start webserver", err)
+		}
+	}()
+
+	c, err := shared.Connect(&params)
 	if err != nil {
 		log.Fatalln("Unable to create Temporal client", err)
 	}

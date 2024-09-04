@@ -17,6 +17,13 @@ import (
 
 var TASK_QUEUE string = "api-keys-demo"
 
+type Params struct {
+	Namespace    string
+	GrpcEndpoint string
+	ApiKey       string
+	ServerName   string
+}
+
 func HelloWorkflow(ctx workflow.Context, name string) (string, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("HelloWorkflow started", "name", name)
@@ -44,7 +51,7 @@ func HelloActivity(ctx context.Context, name string) (string, error) {
 	return "Hello, " + name, nil
 }
 
-func Connect(args []string) (client.Client, error) {
+func ParseParams(args []string) (Params, error) {
 	set := flag.NewFlagSet("worker-api-keys-demo", flag.ExitOnError)
 
 	namespace := set.String("namespace", "Default", "Namespace for the server")
@@ -53,25 +60,38 @@ func Connect(args []string) (client.Client, error) {
 	serverName := strings.Split(*grpcEndpoint, ":")[0]
 
 	if err := set.Parse(args); err != nil {
-		return nil, fmt.Errorf("failed parsing args: %w", err)
+		return Params{}, fmt.Errorf("failed parsing args: %w", err)
 	} else if *apiKey == "" {
-		return nil, fmt.Errorf("-namespace is required")
+		return Params{}, fmt.Errorf("-namespace is required")
 	}
 
+	return Params{
+		Namespace:    *namespace,
+		GrpcEndpoint: *grpcEndpoint,
+		ApiKey:       *apiKey,
+		ServerName:   serverName,
+	}, nil
+}
+
+func Connect(params *Params) (client.Client, error) {
 	return client.Dial(client.Options{
-		HostPort:    *grpcEndpoint,
-		Namespace:   *namespace,
-		Credentials: client.NewAPIKeyStaticCredentials(*apiKey),
+		HostPort:  params.GrpcEndpoint,
+		Namespace: params.Namespace,
+		Credentials: client.NewAPIKeyDynamicCredentials(
+			func(context.Context) (string, error) {
+				return params.ApiKey, nil
+			},
+		),
 		ConnectionOptions: client.ConnectionOptions{
 			TLS: &tls.Config{
 				InsecureSkipVerify: true,
-				ServerName:         serverName,
+				ServerName:         params.ServerName,
 			},
 			DialOptions: []grpc.DialOption{
 				grpc.WithUnaryInterceptor(
 					func(ctx context.Context, method string, req any, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 						return invoker(
-							metadata.AppendToOutgoingContext(ctx, "temporal-namespace", *namespace),
+							metadata.AppendToOutgoingContext(ctx, "temporal-namespace", params.Namespace),
 							method,
 							req,
 							reply,

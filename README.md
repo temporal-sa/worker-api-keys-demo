@@ -6,15 +6,42 @@
 * A namespace with API key authentication enabled (*Allow API Key authentication*). \* Note the gRPC endpoint for the namespace.
 * [An API key](https://docs.temporal.io/cloud/api-keys) for Namespace authentication.
 
-## Run this demo
+## Run a simple demo
 
-1. Create [an API key](https://docs.temporal.io/cloud/api-keys) for Namespace authentication (see [prequisites](#prerequisites)).
-2. Create a name
-3. Start the worker
+1. Create a service account that has writer or namespace administrator access to a namespace that has API key authentication enabled.
+1. Create [an API key](https://docs.temporal.io/cloud/api-keys) for the service account.
+2. Start the worker
 ```
 go run ./worker -namespace <namespace> -grpcEndpoint <grpcEndpoint> -apikey <apikey>
 ```
-4. Run a workflow
+3. Run a workflow
 ```
 go run ./starter -namespace <namespace> -grpcEndpoint <grpcEndpoint> -apikey <apikey>
 ```
+
+## Demonstrate key revocation, hot key reloading 🌶️
+
+1. Create 2 [API keys](https://docs.temporal.io/cloud/api-keys) (`apikey1` and `apikey2`)
+2. Start the worker using `apikey1`
+```
+go run ./worker -namespace <namespace> -grpcEndpoint <grpcEndpoint> -apikey <apikey1>
+```
+3. Run a workflow using `apikey2`
+```
+go run ./starter -namespace <namespace> -grpcEndpoint <grpcEndpoint> -apikey <apike21>
+```
+4. Disable `key1`
+```
+tcld apikey disable --id <key1 id>
+```
+5. Wait for the worker to fail pollings (`WARN  Failed to poll for task.`)
+6. Run a workflow using `apikey2`
+```
+go run ./starter -namespace <namespace> -grpcEndpoint <grpcEndpoint> -apikey <apike21>
+```
+Note the work flow doesn't progress.
+7. Update the worker so that it uses `key2` (which is still enabled)
+```
+curl -X PUT http://localhost:3333/ -d 'key2'
+```
+8. The workflow will now complete.
